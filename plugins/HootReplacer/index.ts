@@ -1,12 +1,11 @@
 import { after } from "@vendetta/patcher";
-import { findByProps, findByName } from "@vendetta/metro";
+import { findByProps } from "@vendetta/metro";
 import { storage } from "@vendetta/plugin";
 import { useProxy } from "@vendetta/storage";
-import { React, ReactNative } from "@vendetta/metro/common";
+import { React } from "@vendetta/metro/common";
 import { Forms } from "@vendetta/ui/components";
 
 const { FormRow, FormSwitch, FormInput, FormSection, FormDivider } = Forms;
-const { Image } = ReactNative;
 
 storage.replacementName ??= "okay";
 storage.badgeEnabled    ??= false;
@@ -45,66 +44,8 @@ function patchUser(res: any) {
 export default {
   onLoad() {
     const UserStore = findByProps("getUser", "getCurrentUser");
-
     patches.push(after("getUser", UserStore, ([_]: [any], res: any) => patchUser(res)));
     patches.push(after("getCurrentUser", UserStore, ([]: [], res: any) => patchUser(res)));
-
-    const candidateNames = [
-      "ProfileBadges",
-      "UserBadges",
-      "BadgeList",
-      "Badges",
-      "ProfileBadge",
-      "MemberListBadges",
-    ];
-
-    let BadgeComp: any = null;
-
-    for (const name of candidateNames) {
-      const found = findByName(name, false);
-      if (found) {
-        BadgeComp = found;
-        console.log(`[HootReplacer] Found badge component: ${name}`);
-        break;
-      }
-    }
-
-    if (!BadgeComp) {
-      const byProps = findByProps("getBadges") ?? findByProps("renderBadge") ?? findByProps("badges", "userId");
-      if (byProps) {
-        BadgeComp = byProps;
-        console.log(`[HootReplacer] Found badge component via props`);
-      }
-    }
-
-    if (!BadgeComp) {
-      console.log("[HootReplacer] No badge component found");
-      return;
-    }
-
-    patches.push(
-      after("default", BadgeComp, ([props]: [any], res: any) => {
-        if (!storage.badgeEnabled || !storage.badgeId) return;
-        const badge = BADGES[storage.badgeId];
-        if (!badge || !res?.props) return;
-
-        const currentUser = UserStore.getCurrentUser();
-        if (!currentUser) return;
-        if (props?.userId && props.userId !== currentUser.id) return;
-
-        const children = res.props.children
-          ? (Array.isArray(res.props.children) ? res.props.children : [res.props.children])
-          : [];
-
-        const badgeEl = React.createElement(Image, {
-          key:    "hoot-injected-badge",
-          source: { uri: badge.url },
-          style:  { width: 22, height: 22, marginHorizontal: 2 },
-        });
-
-        res.props.children = [...children, badgeEl];
-      })
-    );
   },
 
   onUnload() {
@@ -126,24 +67,14 @@ export default {
           onChange:    (v: string) => { proxy.replacementName = v; },
         }),
       ),
-      React.createElement(FormSection, { title: "Badge Injection" },
+      React.createElement(FormSection, { title: "Badge Injection (coming soon)" },
         React.createElement(FormRow, {
-          label:    "Inject badge",
-          subLabel: "Adds a badge next to your username (local only)",
-          trailing: React.createElement(FormSwitch, {
-            value:          proxy.badgeEnabled,
-            onValueChange:  (v: boolean) => { proxy.badgeEnabled = v; },
-          }),
+          label:    "Badge injection",
+          subLabel: "Not yet supported on this build — coming soon",
         }),
         React.createElement(FormDivider, null),
-        React.createElement(FormInput, {
-          title:       "Badge ID",
-          placeholder: "staff",
-          value:       proxy.badgeId,
-          onChange:    (v: string) => { proxy.badgeId = v; },
-        }),
         React.createElement(FormRow, {
-          label:    "Available IDs",
+          label:    "Available IDs (for future use)",
           subLabel: Object.entries(BADGES)
             .map(([k, v]) => `${k} — ${v.label}`)
             .join("\n"),
