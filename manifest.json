@@ -1,7 +1,0 @@
-{
-  "name": "HootspooterReplace",
-  "description": "Replaces hootspooter with okay",
-  "authors": [{ "name": "you", "id": "0" }],
-  "main": "index.js",
-  "hash": "1"
-}
