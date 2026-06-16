@@ -1,12 +1,29 @@
-import { logger } from "@vendetta";
-import Settings from "./Settings";
+import { findByProps } from "@vendetta/metro";
+import { after } from "@vendetta/patcher";
+
+let unpatch: (() => void)[] = [];
+
+function patchText(obj: any) {
+    if (typeof obj === "string") {
+        return obj.replace(/hootspooter/gi, "okay");
+    }
+    return obj;
+}
 
 export default {
-    onLoad: () => {
-        logger.log("Hello world!");
+    onLoad() {
+        const TextComponent = findByProps("Text");
+        if (TextComponent?.Text?.render) {
+            unpatch.push(after("render", TextComponent.Text, (_, res) => {
+                if (res?.props?.children) {
+                    res.props.children = patchText(res.props.children);
+                }
+                return res;
+            }));
+        }
     },
-    onUnload: () => {
-        logger.log("Goodbye, world.");
-    },
-    settings: Settings,
-}
+    onUnload() {
+        unpatch.forEach(u => u());
+        unpatch = [];
+    }
+};
