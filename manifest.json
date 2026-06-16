@@ -1,7 +1,1 @@
-{
-    "name": "HootspooterReplace",
-    "description": "Replaces hootspooter with okay in the UI",
-    "authors": [{ "name": "me", "id": "0" }],
-    "main": "index.ts",
-    "hash": "1"
-}
+{"name":"HootspooterReplace","description":"Replaces hootspooter with okay in the UI","authors":[{"name":"me","id":"0"}],"main":"index.js","hash":"16f18c867665a1976b99b6e76513c298344c75df72edb414731474c6140aa4f7"}
