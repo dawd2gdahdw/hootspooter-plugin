@@ -1,7 +1,7 @@
 import { after } from "@vendetta/patcher";
 import { findByProps } from "@vendetta/metro";
 
-const FIND = /hootspotted/gi;
+const FIND = /hootspotter/gi;
 const REPLACE = "okay";
 
 const patches: (() => void)[] = [];
