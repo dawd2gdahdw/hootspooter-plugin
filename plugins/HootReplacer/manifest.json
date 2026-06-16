@@ -1,0 +1,12 @@
+{
+  "name": "HootReplacer",
+  "description": "Replaces 'hootspotted' with 'okay' in messages before sending.",
+  "authors": [
+    {
+      "name": "you",
+      "id": "0"
+    }
+  ],
+  "main": "index.ts",
+  "version": "1.0.0"
+}

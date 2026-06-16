@@ -1,7 +1,0 @@
-{
-    "name": "HootspooterReplace",
-    "description": "Replaces the username 'hootspotter' with 'okay' everywhere in the Discord UI",
-    "authors": [{ "name": "me", "id": "0" }],
-    "main": "index.ts",
-    "hash": "1"
-}
