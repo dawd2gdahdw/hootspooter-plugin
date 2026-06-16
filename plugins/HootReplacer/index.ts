@@ -4,28 +4,27 @@ import { findByProps } from "@vendetta/metro";
 const FIND = /hootspotted/gi;
 const REPLACE = "okay";
 
-const patches = [];
+const patches: (() => void)[] = [];
 
-function patchUser(user) {
-  if (!user) return user;
-  const patched = { ...user };
-  if (patched.username) patched.username = patched.username.replace(FIND, REPLACE);
-  if (patched.globalName) patched.globalName = patched.globalName.replace(FIND, REPLACE);
-  return patched;
+function patchUser(res: any) {
+  if (!res) return;
+  if (typeof res.username === "string")
+    res.username = res.username.replace(FIND, REPLACE);
+  if (typeof res.globalName === "string")
+    res.globalName = res.globalName.replace(FIND, REPLACE);
+  // return nothing — let the original object pass through, just mutated
 }
 
 export default {
   onLoad() {
     const UserStore = findByProps("getUser", "getCurrentUser");
 
-    // Patch every user lookup so your username renders as "okay" everywhere
     patches.push(
-      after("getUser", UserStore, ([_id], res) => patchUser(res))
+      after("getUser", UserStore, ([_id]: [string], res: any) => patchUser(res))
     );
 
-    // getCurrentUser is what Discord uses to show YOUR username in the UI
     patches.push(
-      after("getCurrentUser", UserStore, ([_], res) => patchUser(res))
+      after("getCurrentUser", UserStore, ([]: [], res: any) => patchUser(res))
     );
   },
 
