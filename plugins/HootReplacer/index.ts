@@ -7,7 +7,6 @@ import { Forms } from "@vendetta/ui/components";
 
 const { FormRow, FormSwitch, FormInput, FormSection, FormDivider } = Forms;
 
-// Defaults
 storage.replacementName ??= "okay";
 storage.badgeEnabled    ??= false;
 storage.badgeId         ??= "staff";
@@ -32,7 +31,6 @@ const BADGES: Record<string, { label: string; url: string }> = {
 
 const patches: (() => void)[] = [];
 
-// ── Username patch ────────────────────────────────────────────────────────────
 function patchUser(res: any) {
   if (!res) return;
   const find    = /hootspotter/gi;
@@ -43,56 +41,81 @@ function patchUser(res: any) {
     res.globalName = res.globalName.replace(find, replace);
 }
 
-// ── Badge patch ───────────────────────────────────────────────────────────────
-// Kettu/Vendetta exposes the ProfileBadges component which renders the badge row.
-// We patch it to append our custom badge image.
-function getBadgeComponent() {
-  // Try common module names used across Vendetta forks
-  return (
-    findByName("ProfileBadges", false) ??
-    findByProps("ProfileBadges")?.ProfileBadges ??
-    null
-  );
-}
-
 export default {
   onLoad() {
     const UserStore = findByProps("getUser", "getCurrentUser");
 
-    // Username patches
     patches.push(after("getUser", UserStore, ([_]: [any], res: any) => patchUser(res)));
     patches.push(after("getCurrentUser", UserStore, ([]: [], res: any) => patchUser(res)));
 
-    // Badge patch — wrap the ProfileBadges render function
-    const BadgeComp = getBadgeComponent();
-    if (BadgeComp) {
-      patches.push(
-        after("default", BadgeComp, ([props]: [any], res: any) => {
-          if (!storage.badgeEnabled || !storage.badgeId) return;
-          const badge = BADGES[storage.badgeId];
-          if (!badge) return;
+    // Try every known badge component name across Kettu/Vendetta builds
+    const candidateNames = [
+      "ProfileBadges",
+      "UserBadges",
+      "BadgeList",
+      "Badges",
+      "ProfileBadge",
+      "MemberListBadges",
+    ];
 
-          // Only inject on our own profile
-          const currentUser = UserStore.getCurrentUser();
-          if (!currentUser || props?.userId !== currentUser.id) return;
+    let BadgeComp: any = null;
+    let foundName = "";
 
-          const { Image, View } = findByProps("Image") ?? {};
-          if (!res?.props?.children || !Image) return;
-
-          const children = Array.isArray(res.props.children)
-            ? res.props.children
-            : [res.props.children];
-
-          const badgeEl = React.createElement(Image, {
-            key:    "hoot-badge",
-            source: { uri: badge.url },
-            style:  { width: 20, height: 20, marginHorizontal: 2 },
-          });
-
-          res.props.children = [...children, badgeEl];
-        })
-      );
+    for (const name of candidateNames) {
+      const found = findByName(name, false);
+      if (found) {
+        BadgeComp = found;
+        foundName = name;
+        console.log(`[HootReplacer] Found badge component: ${name}`);
+        break;
+      }
     }
+
+    // Also try findByProps with badge-related keys
+    if (!BadgeComp) {
+      const byProps = findByProps("getBadges") ?? findByProps("renderBadge") ?? findByProps("badges", "userId");
+      if (byProps) {
+        BadgeComp = byProps;
+        foundName = "findByProps match";
+        console.log(`[HootReplacer] Found badge component via props`);
+      }
+    }
+
+    if (!BadgeComp) {
+      console.log("[HootReplacer] Could not find badge component — badge injection disabled");
+      return;
+    }
+
+    const patchTarget = BadgeComp.default ?? BadgeComp;
+
+    patches.push(
+      after("default", BadgeComp, ([props]: [any], res: any) => {
+        if (!storage.badgeEnabled || !storage.badgeId) return;
+        const badge = BADGES[storage.badgeId];
+        if (!badge || !res) return;
+
+        const currentUser = UserStore.getCurrentUser();
+        if (!currentUser) return;
+        // Only inject on our own profile; some components don't pass userId so allow if undefined
+        if (props?.userId && props.userId !== currentUser.id) return;
+
+        const RN = findByProps("Image", "View", "Text");
+        if (!RN?.Image) return;
+
+        const children = res.props?.children
+          ? (Array.isArray(res.props.children) ? res.props.children : [res.props.children])
+          : [];
+
+        const badgeEl = React.createElement(RN.Image, {
+          key:    "hoot-injected-badge",
+          source: { uri: badge.url },
+          style:  { width: 22, height: 22, marginHorizontal: 2 },
+        });
+
+        res.props.children = [...children, badgeEl];
+        console.log(`[HootReplacer] Injected badge: ${storage.badgeId}`);
+      })
+    );
   },
 
   onUnload() {
