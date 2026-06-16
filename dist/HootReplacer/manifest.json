@@ -1,1 +1,1 @@
-{"name":"HootReplacer","description":"Replaces 'hootspotted' with 'okay' in messages before sending.","authors":[{"name":"you","id":"0"}],"main":"index.js","version":"1.0.0","hash":"1a939b98b0e7425c4b5d991dc77ba31a25361606dbb849d4ca7d6df45757d277"}
+{"name":"HootReplacer","description":"Replaces 'hootspotted' with 'okay' in messages before sending.","authors":[{"name":"you","id":"0"}],"main":"index.js","version":"1.0.0","hash":"c7b0d1b2327ef786e93184bb6989e90807cc59de4ee46627eaf25f99927cefe9"}
