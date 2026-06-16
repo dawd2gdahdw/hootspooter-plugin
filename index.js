@@ -3,18 +3,13 @@ import { after } from "@vendetta/patcher";
 
 let unpatch: (() => void)[] = [];
 
-function replaceText(val: any): any {
-    if (typeof val === "string") return val.replace(/hootspotter/gi, "okay");
-    if (Array.isArray(val)) return val.map(replaceText);
-    return val;
-}
-
 export default {
     onLoad() {
-        const React = findByProps("createElement");
-        unpatch.push(after("createElement", React, (args, res) => {
-            if (res?.props?.children) {
-                res.props.children = replaceText(res.props.children);
+        const DCDText = findByProps("TextStyleSheet");
+        if (!DCDText) return;
+        unpatch.push(after("render", DCDText, (_, res) => {
+            if (typeof res?.props?.children === "string") {
+                res.props.children = res.props.children.replace(/hootspotter/gi, "okay");
             }
             return res;
         }));
