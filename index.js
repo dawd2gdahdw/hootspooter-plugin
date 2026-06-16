@@ -1,1 +1,21 @@
-(function(n,o,d){"use strict";let r=[];var a={onLoad(){const e=o.findByProps("TextStyleSheet");e&&r.push(d.after("render",e,function(c,t){return typeof t?.props?.children=="string"&&(t.props.children=t.props.children.replace(/hootspotter/gi,"okay")),t}))},onUnload(){r.forEach(function(e){return e()}),r=[]}};return n.default=a,Object.defineProperty(n,"__esModule",{value:!0}),n})({},vendetta.metro,vendetta.patcher);
+import { findByProps } from "@vendetta/metro";
+import { after } from "@vendetta/patcher";
+
+let unpatch: (() => void)[] = [];
+
+export default {
+    onLoad() {
+        const UserStore = findByProps("getCurrentUser");
+        const originalGetCurrentUser = UserStore.getCurrentUser.bind(UserStore);
+        unpatch.push(after("getCurrentUser", UserStore, (_, user) => {
+            if (user && user.username === "hootspotter") {
+                return { ...user, username: "okay" };
+            }
+            return user;
+        }));
+    },
+    onUnload() {
+        unpatch.forEach(u => u());
+        unpatch = [];
+    }
+};
